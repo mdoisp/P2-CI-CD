@@ -16,9 +16,13 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
   },
+  age: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
   tableName: 'users',
   timestamps: true,
 });
 
-module.exports = User; 
+module.exports = { User }; 
