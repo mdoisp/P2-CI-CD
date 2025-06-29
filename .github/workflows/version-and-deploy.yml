@@ -70,10 +70,15 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "commit_type=$COMMIT_TYPE" >> $GITHUB_OUTPUT
+          
+          # Salvar o tipo do commit em um arquivo para usar na próxima etapa
+          echo "$COMMIT_TYPE" > commit_type.txt
 
       - name: 🔄 Atualizar package.json
         run: |
+          # Ler o tipo do commit do arquivo
+          COMMIT_TYPE=$(cat commit_type.txt)
+          
           # Atualizar versão no package.json
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
           
@@ -81,7 +86,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add package.json
-          git commit -m "${{ steps.version.outputs.commit_type }}: bump version to ${{ steps.version.outputs.version }}"
+          git commit -m "$COMMIT_TYPE: bump version to ${{ steps.version.outputs.version }}"
           git push
 
       - name: 🏷️ Criar tag
@@ -128,7 +133,7 @@ jobs:
           
           Para mais detalhes, acesse: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           
-          # Enviar email usando curl com SMTP
+          # Enviar email usando curl com SMTP (configurado para Outlook)
           curl --mail-from "${{ secrets.EMAIL_USER }}" \
                --mail-rcpt "${{ secrets.MAIL_TO }}" \
                --upload-file - \
