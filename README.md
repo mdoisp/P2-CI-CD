@@ -4,26 +4,18 @@ API REST para integração e entrega contínua (P2) com deploy automatizado no R
 
 ## 🚀 Como Funciona
 
-1. **Push na main** → Detecta tipo de commit e incrementa versão
-2. **Versão incrementada** → Cria tag automaticamente
-3. **Build Docker** → Com a tag exata
-4. **Push Docker Hub** → Com a tag exata
-5. **Deploy Render** → Automaticamente
+1. **Push na main** → Deploy automático
+2. **Build Docker** → Com tag baseada no commit
+3. **Push Docker Hub** → Com tag única
+4. **Deploy Render** → Automaticamente
 
-## 📝 Versionamento Semântico
+## 📝 Exemplo de Uso
 
-### Tipos de Commit:
-- **`feat:`** → Incrementa minor version (1.0.0 → 1.1.0)
-- **`fix:`** → Incrementa patch version (1.0.0 → 1.0.1)
-- **`BREAKING CHANGE:`** → Incrementa major version (1.0.0 → 2.0.0)
-- **Outros** → Não incrementa versão
-
-### Exemplo:
 ```bash
 git add .
-git commit -m "feat: adiciona autenticação"
+git commit -m "adiciona nova funcionalidade"
 git push origin main
-# Resultado: versão 1.0.0 → 1.1.0
+# Resultado: Deploy automático com tag v1.0.0-abc1234
 ```
 
 ## 🔧 Configuração
@@ -50,5 +42,4 @@ git push origin main
 - **Logs**: BetterStack + Winston
 - **CI/CD**: GitHub Actions
 - **Deploy**: Render
-- **Container**: Docker
-- **Versionamento**: Semântico automático 
+- **Container**: Docker 
