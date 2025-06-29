@@ -2,6 +2,7 @@ const winston = require('winston');
 const axios = require('axios');
 
 const betterStackUrl = process.env.BETTERSTACK_URL;
+const betterStackToken = process.env.BETTERSTACK_TOKEN;
 
 // Configuração do logger Winston
 const logger = winston.createLogger({
@@ -28,6 +29,11 @@ async function sendToBetterStack(log) {
     return;
   }
   
+  if (!betterStackToken) {
+    logger.warn('BETTERSTACK_TOKEN não configurado - logs não serão enviados');
+    return;
+  }
+  
   try {
     const enhancedLog = {
       ...log,
@@ -42,6 +48,7 @@ async function sendToBetterStack(log) {
     await axios.post(betterStackUrl, enhancedLog, {
       headers: { 
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${betterStackToken}`,
         'User-Agent': 'P2-API-Logger/1.0'
       },
       timeout: 5000, // 5 segundos de timeout

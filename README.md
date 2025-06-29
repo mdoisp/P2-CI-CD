@@ -41,6 +41,13 @@ git push origin main
 - `RENDER_TOKEN`: Token de API do Render
 - `RENDER_SERVICE_ID`: ID do serviço no Render
 - `BETTERSTACK_URL`: URL de ingestão do BetterStack
+- `BETTERSTACK_TOKEN`: Token de autenticação do BetterStack
+
+### Como configurar o BetterStack:
+1. Acesse [BetterStack](https://betterstack.com)
+2. Crie uma nova fonte de logs
+3. Copie a URL de ingestão para `BETTERSTACK_URL`
+4. Copie o token de autenticação para `BETTERSTACK_TOKEN`
 
 ## 📊 Endpoints
 
