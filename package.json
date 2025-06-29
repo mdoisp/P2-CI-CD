@@ -1,16 +1,12 @@
 {
-  "name": "api",
+  "name": "p2-api",
   "version": "1.0.0",
   "description": "API REST para integração e entrega contínua (P2)",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "build": "echo \"Build completed\"",
-    "semantic-release": "semantic-release"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -28,34 +24,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^8.0.7",
-    "@semantic-release/npm": "^9.0.2",
-    "semantic-release": "^21.1.1",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
     "sqlite3": "^5.1.6"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/app.js",
-      "!src/swagger.js"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "html"]
-  },
-  "release": {
-    "branches": ["main"],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      "@semantic-release/github",
-      "@semantic-release/git"
-    ]
   }
-}
+} 

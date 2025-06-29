@@ -1,0 +1,98 @@
+name: Version and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version-and-deploy:
+    name: Version and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Clonar o repositório
+        uses: actions/checkout@v4
+
+      - name: 🔧 Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 🧪 Instalar dependências
+        run: npm install
+
+      - name: 📝 Detectar tipo de commit e incrementar versão
+        id: version
+        run: |
+          # Obter a mensagem do último commit
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Ler versão atual
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Detectar tipo de commit e incrementar versão
+          if [[ $COMMIT_MSG == BREAKING* ]] || [[ $COMMIT_MSG == *BREAKING* ]]; then
+            echo "Detected: major version bump"
+            # Incrementar major version (1.0.0 -> 2.0.0)
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR=$((VERSION_PARTS[0] + 1))
+            MINOR=0
+            PATCH=0
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          elif [[ $COMMIT_MSG == feat:* ]]; then
+            echo "Detected: minor version bump"
+            # Incrementar minor version (1.0.0 -> 1.1.0)
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=$((VERSION_PARTS[1] + 1))
+            PATCH=0
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          else
+            echo "Detected: patch version bump"
+            # Incrementar patch version (1.0.0 -> 1.0.1)
+            IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=$((VERSION_PARTS[2] + 1))
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
+          
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 🔄 Atualizar package.json
+        run: |
+          # Atualizar versão no package.json
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          
+          # Commit e push da nova versão
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git push
+
+      - name: 🏷️ Criar tag
+        run: |
+          git tag ${{ steps.version.outputs.version_tag }}
+          git push origin ${{ steps.version.outputs.version_tag }}
+
+      - name: 🐳 Login no Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: 🏗️ Build da imagem
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/p2-api:${{ steps.version.outputs.version_tag }} .
+
+      - name: 📤 Push da imagem para o Docker Hub
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/p2-api:${{ steps.version.outputs.version_tag }}
+
+      - name: 🚀 Deploy para Render
+        run: |
+          curl -X POST https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys \
+            -H 'Authorization: Bearer ${{ secrets.RENDER_TOKEN }}' \
+            -H 'Content-Type: application/json' \
+            -d '{}' 

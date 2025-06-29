@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger');
 require('dotenv').config();
-const { betterstackLogger, logError, logger } = require('./middlewares/betterstackLogger');
+const { betterstackLogger, logError, logInfo, logWarning, logger } = require('./middlewares/betterstackLogger');
 
 // Inicialização do app
 const app = express();
@@ -33,7 +33,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 if (process.env.NODE_ENV !== 'test') {
   sequelize.sync()
     .then(() => {
-      logger.info('Banco de dados sincronizado com sucesso');
+      logInfo('Banco de dados sincronizado com sucesso', {
+        database: process.env.DB_NAME || 'unknown',
+        host: process.env.DB_HOST || 'localhost'
+      });
     })
     .catch(err => {
       logError(err);
@@ -47,21 +50,33 @@ app.use('/users', userRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
+  logInfo('Acesso à rota raiz', {
+    requestId: req.requestId,
+    userAgent: req.get('User-Agent')
+  });
+  
   res.json({ 
     message: 'API rodando com sucesso!',
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId
   });
 });
 
 // Rota de health check
 app.get('/health', (req, res) => {
+  logInfo('Health check realizado', {
+    requestId: req.requestId,
+    uptime: process.uptime()
+  });
+  
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    requestId: req.requestId
   });
 });
 
@@ -74,19 +89,26 @@ app.use((err, req, res, next) => {
       message: process.env.NODE_ENV === 'production' ? 'Erro interno do servidor' : err.message,
       status: err.status || 500,
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id']
+      requestId: req.requestId
     }
   });
 });
 
 // Middleware para rotas não encontradas
 app.use('*', (req, res) => {
+  logWarning('Rota não encontrada', {
+    method: req.method,
+    url: req.originalUrl,
+    requestId: req.requestId,
+    ip: req.ip
+  });
+  
   res.status(404).json({
     error: {
       message: 'Rota não encontrada',
       status: 404,
       timestamp: new Date().toISOString(),
-      requestId: req.headers['x-request-id']
+      requestId: req.requestId
     }
   });
 });
@@ -94,10 +116,11 @@ app.use('*', (req, res) => {
 // Inicialização do servidor (apenas se não estiver em teste)
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    logger.info(`Servidor rodando na porta ${PORT}`, {
+    logInfo('Servidor iniciado com sucesso', {
       port: PORT,
       environment: process.env.NODE_ENV || 'development',
-      nodeVersion: process.version
+      nodeVersion: process.version,
+      betterstackConfigured: !!process.env.BETTERSTACK_URL
     });
   });
 
@@ -109,8 +132,20 @@ if (process.env.NODE_ENV !== 'test') {
   });
 
   process.on('unhandledRejection', (reason, promise) => {
-    logError(new Error(`Promise rejeitada: ${reason}`));
+    const error = new Error(`Promise rejeitada: ${reason}`);
+    logError(error);
     logger.error('Promise rejeitada não tratada:', reason);
+  });
+
+  // Log de shutdown graceful
+  process.on('SIGTERM', () => {
+    logInfo('Sinal SIGTERM recebido, iniciando shutdown graceful');
+    process.exit(0);
+  });
+
+  process.on('SIGINT', () => {
+    logInfo('Sinal SIGINT recebido, iniciando shutdown graceful');
+    process.exit(0);
   });
 }
 
