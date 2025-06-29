@@ -128,14 +128,98 @@ O projeto usa semantic-release para versionamento automático:
 
 ## 🔄 Workflow CI/CD
 
-1. **Push para main** → Trigger do workflow
-2. **Testes** → Executa testes automatizados
-3. **Semantic Release** → Analisa commits e gera nova versão
-4. **Build Docker** → Constrói imagem otimizada
-5. **Push Docker Hub** → Publica imagem com tags
-6. **Deploy Render** → Deploy automático via API
-7. **Health Check** → Verifica se o deploy foi bem-sucedido
-8. **Notificação** → Envia email em caso de erro
+### **Git Flow + CI/CD - Fluxo Completo:**
+
+#### **1. Feature Branch → Development**
+```bash
+git checkout -b feature/nova-funcionalidade
+# ... fazer mudanças ...
+git push origin feature/nova-funcionalidade
+# Criar PR para development
+```
+- ✅ **Testes**: Executa testes automatizados
+- ✅ **Build Docker**: Constrói imagem otimizada
+- ✅ **Push Docker Hub**: Publica imagem com tag `pr-{número}`
+- ✅ **Validação**: Verifica se tudo funciona
+- ✅ **Merge**: Se passar, merge para development
+
+#### **2. Development → Main**
+```bash
+# Criar PR de development para main
+# → GitHub Actions roda novamente
+# → Se passar → Merge para main
+# → AUTOMATICAMENTE faz deploy no Render!
+```
+- ✅ **Testes**: Executa testes automatizados
+- ✅ **Semantic Release**: Gera nova versão
+- ✅ **Build Docker**: Constrói imagem otimizada
+- ✅ **Push Docker Hub**: Publica com tags (latest, version, main)
+- ✅ **Deploy Render**: Deploy automático via API
+- ✅ **Health Check**: Verifica se o deploy foi bem-sucedido
+
+### **Resumo do Comportamento:**
+
+| Ação | Testes | Build Docker | Deploy Render | Semantic Release |
+|------|--------|--------------|---------------|------------------|
+| **PR → development** | ✅ | ✅ | ❌ | ❌ |
+| **PR → main** | ✅ | ✅ | ✅ | ✅ |
+| **Push direto development** | ✅ | ✅ | ❌ | ❌ |
+| **Push direto main** | ✅ | ✅ | ✅ | ✅ |
+
+### **Como saber se deu certo:**
+
+1. **PR para development**: 
+   - ✅ Testes passam
+   - ✅ Imagem Docker é construída
+   - ✅ Imagem é publicada no Docker Hub com tags:
+     - `latest` - Versão mais recente
+     - `v1.0.0` - Versão semântica
+     - `pr-{número}` - Número do PR
+     - `{commit-hash}` - Hash do commit
+
+2. **PR para main (quando mergeado)**:
+   - ✅ Testes passam
+   - ✅ Semantic release gera nova versão
+   - ✅ Imagem Docker é construída
+   - ✅ Imagem é publicada no Docker Hub com tags:
+     - `latest` - Versão mais recente
+     - `v1.0.0` - Versão semântica
+     - `main` - Branch principal
+   - ✅ **Deploy automático no Render**
+   - ✅ Health check confirma sucesso
+
+### **Padrão de Tags Docker:**
+
+| Tag | Descrição | Exemplo |
+|-----|-----------|---------|
+| `latest` | Versão mais recente | `matpp/p2-api:latest` |
+| `v1.0.0` | Versão semântica | `matpp/p2-api:v1.0.0` |
+| `main` | Branch principal | `matpp/p2-api:main` |
+| `development` | Branch de desenvolvimento | `matpp/p2-api:development` |
+| `pr-{número}` | Pull Request | `matpp/p2-api:pr-5` |
+| `{commit-hash}` | Hash do commit | `matpp/p2-api:89596d5a` |
+
+### **Fluxo Recomendado (Git Flow):**
+
+```bash
+# 1. Desenvolver em feature branch
+git checkout -b feature/nova-funcionalidade
+# ... fazer mudanças ...
+git push origin feature/nova-funcionalidade
+
+# 2. PR para development → Testa tudo (sem deploy)
+# 3. Se PR passar → Merge para development
+# 4. PR de development para main → Testa tudo + Deploy
+# 5. Se PR passar → Merge para main → Deploy automático!
+```
+
+### **Vantagens do Git Flow + CI/CD:**
+
+- 🔒 **Segurança**: Código só vai para produção após review
+- 🧪 **Testes**: Cada PR é testado automaticamente
+- 🚀 **Deploy Automático**: Sem intervenção manual
+- 📊 **Visibilidade**: Você vê cada etapa no GitHub Actions
+- 🔄 **Rollback**: Pode reverter facilmente se algo der errado
 
 ## 📊 Monitoramento
 
@@ -159,17 +243,20 @@ GET /health
 
 O deploy é totalmente automatizado:
 
-1. Faça push para a branch `main`
-2. O GitHub Actions executa o pipeline
-3. A imagem é publicada no Docker Hub
-4. O Render faz deploy automaticamente
-5. Health check confirma o sucesso
+1. Faça PR de development para main
+2. Merge o PR quando os testes passarem
+3. O GitHub Actions executa o pipeline completo
+4. A imagem é publicada no Docker Hub
+5. O Render faz deploy automaticamente
+6. Health check confirma o sucesso
 
 ## 📁 Estrutura do Projeto
 
 ```
 P2-CI-CD/
 ├── .github/workflows/    # GitHub Actions
+│   ├── ci-cd.yml        # Pipeline principal
+│   └── deploy-on-merge.yml  # Deploy após merge
 ├── src/
 │   ├── app.js           # Aplicação principal
 │   ├── config/          # Configurações
@@ -177,6 +264,8 @@ P2-CI-CD/
 │   ├── middlewares/     # Middlewares
 │   ├── models/          # Modelos
 │   └── routes/          # Rotas
+├── tests/
+│   └── basic.test.js    # Testes básicos
 ├── Dockerfile           # Configuração Docker
 ├── docker-compose.yml   # Docker Compose
 ├── render.yaml          # Configuração Render
@@ -199,6 +288,14 @@ P2-CI-CD/
    - Verifique se a URL do BetterStack está correta
    - Confirme se o token tem permissões de ingestão
 
+4. **Pipeline não roda em PRs**
+   - Verifique se o PR está direcionado para `main` ou `development`
+   - Confirme se os workflows estão habilitados no repositório
+
+5. **Deploy não acontece após merge**
+   - Verifique se o PR foi realmente mergeado (não apenas fechado)
+   - Confirme se o workflow `deploy-on-merge.yml` está ativo
+
 ## 📞 Suporte
 
 Para dúvidas ou problemas:
@@ -209,4 +306,3 @@ Para dúvidas ou problemas:
 ## 📄 Licença
 
 Este projeto está sob a licença ISC.
-

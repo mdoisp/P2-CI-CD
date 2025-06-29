@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // Banco de dados
 const sequelize = require('./config/database');
-const User = require('./models/user');
+const { User } = require('./models/user');
 
 // Middlewares
 app.use(express.json());
@@ -29,15 +29,17 @@ app.use((req, res, next) => {
 // Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Sincronizar banco ao iniciar
-sequelize.sync()
-  .then(() => {
-    logger.info('Banco de dados sincronizado com sucesso');
-  })
-  .catch(err => {
-    logError(err);
-    logger.error('Erro ao sincronizar banco:', err.message);
-  });
+// Sincronizar banco ao iniciar (apenas se não estiver em teste)
+if (process.env.NODE_ENV !== 'test') {
+  sequelize.sync()
+    .then(() => {
+      logger.info('Banco de dados sincronizado com sucesso');
+    })
+    .catch(err => {
+      logError(err);
+      logger.error('Erro ao sincronizar banco:', err.message);
+    });
+}
 
 // Rotas de usuários
 const userRoutes = require('./routes/userRoutes');
@@ -89,23 +91,27 @@ app.use('*', (req, res) => {
   });
 });
 
-// Inicialização do servidor
-app.listen(PORT, () => {
-  logger.info(`Servidor rodando na porta ${PORT}`, {
-    port: PORT,
-    environment: process.env.NODE_ENV || 'development',
-    nodeVersion: process.version
+// Inicialização do servidor (apenas se não estiver em teste)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`Servidor rodando na porta ${PORT}`, {
+      port: PORT,
+      environment: process.env.NODE_ENV || 'development',
+      nodeVersion: process.version
+    });
   });
-});
 
-// Tratamento de erros não capturados
-process.on('uncaughtException', (err) => {
-  logError(err);
-  logger.error('Erro não capturado:', err);
-  process.exit(1);
-});
+  // Tratamento de erros não capturados
+  process.on('uncaughtException', (err) => {
+    logError(err);
+    logger.error('Erro não capturado:', err);
+    process.exit(1);
+  });
 
-process.on('unhandledRejection', (reason, promise) => {
-  logError(new Error(`Promise rejeitada: ${reason}`));
-  logger.error('Promise rejeitada não tratada:', reason);
-});
+  process.on('unhandledRejection', (reason, promise) => {
+    logError(new Error(`Promise rejeitada: ${reason}`));
+    logger.error('Promise rejeitada não tratada:', reason);
+  });
+}
+
+module.exports = app;
