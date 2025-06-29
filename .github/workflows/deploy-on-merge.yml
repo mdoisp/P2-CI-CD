@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - master
     types: [closed]
 
 # Configurar permissões globais para o workflow
@@ -34,6 +35,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Debug branch info
+        run: |
+          echo "Current branch: ${{ github.ref_name }}"
+          echo "Full ref: ${{ github.ref }}"
+          echo "Event name: ${{ github.event_name }}"
+          git branch -a
 
       - name: Semantic Release
         env:

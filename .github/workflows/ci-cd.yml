@@ -4,16 +4,19 @@ on:
   push:
     branches:
       - main
+      - master
       - development
       - 'release/*'
       - 'hotfix/*'
   pull_request:
     branches:
       - main
+      - master
       - development
   pull_request_target:
     branches:
       - main
+      - master
 
 # Configurar permissões globais para o workflow
 permissions:
@@ -47,7 +50,7 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/development' || github.event_name == 'pull_request'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,8 +66,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug branch info
+        run: |
+          echo "Current branch: ${{ github.ref_name }}"
+          echo "Full ref: ${{ github.ref }}"
+          echo "Event name: ${{ github.event_name }}"
+          git branch -a
+
       - name: Semantic Release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
@@ -102,7 +112,7 @@ jobs:
   deploy-to-render:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -146,7 +156,7 @@ jobs:
         if: success()
         run: |
           echo "✅ Pipeline executado com sucesso!"
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.ref }}" = "refs/heads/master" ]; then
             echo "🚀 Deploy realizado no Render"
           fi
           echo "🐳 Imagem Docker publicada no Docker Hub"
