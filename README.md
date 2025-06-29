@@ -126,6 +126,37 @@ O projeto usa semantic-release para versionamento automático:
 - `chore:` - Tarefas de manutenção (patch)
 - `BREAKING CHANGE:` - Mudança incompatível (major)
 
+### Configuração do Semantic Release
+
+O semantic-release está configurado para funcionar automaticamente com o GitHub Actions. As principais configurações incluem:
+
+#### Permissões Necessárias
+- **Contents**: Para fazer push de tags e commits
+- **Issues**: Para criar issues quando há falhas
+- **Pull Requests**: Para comentar em PRs
+
+#### Configuração Automática
+- **Tags**: Criadas automaticamente no formato `v1.0.0`
+- **Releases**: Criadas automaticamente no GitHub
+- **Changelog**: Atualizado automaticamente no `CHANGELOG.md`
+- **Package.json**: Versão incrementada automaticamente
+
+#### Troubleshooting do Semantic Release
+Se o semantic-release falhar com erro de permissões:
+
+1. **Verifique as permissões do repositório**:
+   - Vá em Settings > Actions > General
+   - Configure "Workflow permissions" para "Read and write permissions"
+
+2. **Verifique se o token está configurado**:
+   - O `GITHUB_TOKEN` é fornecido automaticamente
+   - O `NPM_TOKEN` é opcional (só necessário para publicação no npm)
+
+3. **Verifique os logs**:
+   - Os logs do semantic-release mostrarão exatamente onde está falhando
+
+Para mais detalhes, consulte o arquivo `SEMANTIC-RELEASE-SETUP.md`.
+
 ## 🔄 Workflow CI/CD
 
 ### **Git Flow + CI/CD - Fluxo Completo:**
