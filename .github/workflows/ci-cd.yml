@@ -15,6 +15,12 @@ on:
     branches:
       - main
 
+# Configurar permissões globais para o workflow
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/p2-api
@@ -45,6 +51,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,6 +63,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Configure Git
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Semantic Release
         if: github.ref == 'refs/heads/main'
