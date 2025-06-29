@@ -95,4 +95,42 @@ jobs:
           curl -X POST https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys \
             -H 'Authorization: Bearer ${{ secrets.RENDER_TOKEN }}' \
             -H 'Content-Type: application/json' \
-            -d '{}' 
+            -d '{}'
+
+  notify-on-failure:
+    name: 📧 Notificar Falha
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: version-and-deploy
+
+    steps:
+      - name: 📧 Enviar email de notificação
+        run: |
+          # Instalar curl se não estiver disponível
+          which curl || apt-get update && apt-get install -y curl
+          
+          # Preparar dados do email
+          SUBJECT="❌ Pipeline falhou - P2-CI-CD"
+          BODY="O pipeline de CI/CD falhou na execução.
+          
+          Repositório: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Execução: ${{ github.run_id }}
+          
+          Para mais detalhes, acesse: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # Enviar email usando curl com SMTP
+          curl --mail-from "${{ secrets.EMAIL_USER }}" \
+               --mail-rcpt "${{ secrets.MAIL_TO }}" \
+               --upload-file - \
+               --user "${{ secrets.EMAIL_USER }}:${{ secrets.EMAIL_PASS }}" \
+               --ssl-reqd \
+               --url "smtp://${{ secrets.EMAIL_SERVER }}:${{ secrets.EMAIL_PORT }}" <<EOF
+          From: ${{ secrets.EMAIL_USER }}
+          To: ${{ secrets.MAIL_TO }}
+          Subject: $SUBJECT
+          Content-Type: text/plain; charset=UTF-8
+          
+          $BODY
+          EOF 
