@@ -171,15 +171,33 @@ git push origin feature/nova-funcionalidade
 1. **PR para development**: 
    - ✅ Testes passam
    - ✅ Imagem Docker é construída
-   - ✅ Imagem é publicada no Docker Hub com tag `pr-{número}`
+   - ✅ Imagem é publicada no Docker Hub com tags:
+     - `latest` - Versão mais recente
+     - `v1.0.0` - Versão semântica
+     - `pr-{número}` - Número do PR
+     - `{commit-hash}` - Hash do commit
 
 2. **PR para main (quando mergeado)**:
    - ✅ Testes passam
    - ✅ Semantic release gera nova versão
    - ✅ Imagem Docker é construída
-   - ✅ Imagem é publicada no Docker Hub com múltiplas tags
+   - ✅ Imagem é publicada no Docker Hub com tags:
+     - `latest` - Versão mais recente
+     - `v1.0.0` - Versão semântica
+     - `main` - Branch principal
    - ✅ **Deploy automático no Render**
    - ✅ Health check confirma sucesso
+
+### **Padrão de Tags Docker:**
+
+| Tag | Descrição | Exemplo |
+|-----|-----------|---------|
+| `latest` | Versão mais recente | `matpp/p2-api:latest` |
+| `v1.0.0` | Versão semântica | `matpp/p2-api:v1.0.0` |
+| `main` | Branch principal | `matpp/p2-api:main` |
+| `development` | Branch de desenvolvimento | `matpp/p2-api:development` |
+| `pr-{número}` | Pull Request | `matpp/p2-api:pr-5` |
+| `{commit-hash}` | Hash do commit | `matpp/p2-api:89596d5a` |
 
 ### **Fluxo Recomendado (Git Flow):**
 
