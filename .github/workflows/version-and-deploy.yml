@@ -33,9 +33,14 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version: $CURRENT_VERSION"
           
+          # Extrair o tipo do commit (primeira parte antes do :)
+          COMMIT_TYPE=$(echo "$COMMIT_MSG" | cut -d':' -f1)
+          echo "Commit type: $COMMIT_TYPE"
+          
           # Detectar tipo de commit e incrementar versão
           if [[ $COMMIT_MSG == BREAKING* ]] || [[ $COMMIT_MSG == *BREAKING* ]]; then
             echo "Detected: major version bump"
+            COMMIT_TYPE="breaking"
             # Incrementar major version (1.0.0 -> 2.0.0)
             IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
             MAJOR=$((VERSION_PARTS[0] + 1))
@@ -44,6 +49,7 @@ jobs:
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           elif [[ $COMMIT_MSG == feat:* ]]; then
             echo "Detected: minor version bump"
+            # Manter o tipo original (feat)
             # Incrementar minor version (1.0.0 -> 1.1.0)
             IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
             MAJOR=${VERSION_PARTS[0]}
@@ -52,6 +58,7 @@ jobs:
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           else
             echo "Detected: patch version bump"
+            # Manter o tipo original (fix, chore, docs, etc.)
             # Incrementar patch version (1.0.0 -> 1.0.1)
             IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
             MAJOR=${VERSION_PARTS[0]}
@@ -63,17 +70,18 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "commit_type=$COMMIT_TYPE" >> $GITHUB_OUTPUT
 
       - name: 🔄 Atualizar package.json
         run: |
           # Atualizar versão no package.json
           npm version ${{ steps.version.outputs.version }} --no-git-tag-version
           
-          # Commit e push da nova versão
+          # Commit e push da nova versão usando o tipo do commit original
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git commit -m "${{ steps.version.outputs.commit_type }}: bump version to ${{ steps.version.outputs.version }}"
           git push
 
       - name: 🏷️ Criar tag
