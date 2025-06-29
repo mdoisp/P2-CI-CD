@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: p2_api
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - BETTERSTACK_URL=${BETTERSTACK_URL}
+    env_file:
+      - .env
+    command: npm start
+
+volumes:
+  pgdata:
+
