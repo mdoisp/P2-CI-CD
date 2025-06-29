@@ -4,18 +4,33 @@ API REST para integração e entrega contínua (P2) com deploy automatizado no R
 
 ## 🚀 Como Funciona
 
-1. **Push na main** → Deploy automático
-2. **Build Docker** → Com tag baseada no commit
-3. **Push Docker Hub** → Com tag única
-4. **Deploy Render** → Automaticamente
+1. **Push na main** → Detecta tipo de commit e incrementa versão
+2. **Versão incrementada** → Atualiza package.json automaticamente
+3. **Tag criada** → v1.0.1, v1.1.0, v2.0.0 (baseado no tipo de commit)
+4. **Build Docker** → Com a tag exata
+5. **Push Docker Hub** → Com a tag exata
+6. **Deploy Render** → Automaticamente
 
-## 📝 Exemplo de Uso
+## 📝 Versionamento Semântico
 
+### Tipos de Commit:
+- **`feat:`** → Incrementa minor version (1.0.0 → 1.1.0)
+- **`fix:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `chore:`** → Incrementa patch version (1.0.0 → 1.0.1)
+- **`BREAKING CHANGE:`** → Incrementa major version (1.0.0 → 2.0.0)
+
+### Exemplos:
 ```bash
-git add .
-git commit -m "adiciona nova funcionalidade"
+git commit -m "feat: adiciona autenticação"
 git push origin main
-# Resultado: Deploy automático com tag v1.0.0-abc1234
+# Resultado: 1.0.0 → 1.1.0
+
+git commit -m "fix: corrige bug no login"
+git push origin main
+# Resultado: 1.1.0 → 1.1.1
+
+git commit -m "BREAKING CHANGE: remove endpoint antigo"
+git push origin main
+# Resultado: 1.1.1 → 2.0.0
 ```
 
 ## 🔧 Configuração
