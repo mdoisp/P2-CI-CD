@@ -73,6 +73,7 @@ jobs:
           
           # Salvar o tipo do commit em um arquivo para usar na próxima etapa
           echo "$COMMIT_TYPE" > commit_type.txt
+          ## Teste versionamento
 
       - name: 🔄 Atualizar package.json
         run: |
