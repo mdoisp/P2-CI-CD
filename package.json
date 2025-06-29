@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "jest",
-    "semantic-release": "semantic-release"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -25,12 +24,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0",
-    "semantic-release": "^21.1.1",
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
     "sqlite3": "^5.1.6"
-  },
-  "release": {
-    "branches": ["main"]
   }
 } 
