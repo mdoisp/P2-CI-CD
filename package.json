@@ -1,6 +1,6 @@
 {
   "name": "p2-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API REST para integração e entrega contínua (P2)",
   "main": "src/app.js",
   "scripts": {
@@ -28,4 +28,4 @@
     "supertest": "^6.3.3",
     "sqlite3": "^5.1.6"
   }
-} 
+}
