@@ -4,18 +4,26 @@ API REST para integração e entrega contínua (P2) com deploy automatizado no R
 
 ## 🚀 Como Funciona
 
-1. **Push na main** → Semantic Release cria tag automaticamente
-2. **Tag criada** → Deploy Produção roda automaticamente
+1. **Push na main** → Detecta tipo de commit e incrementa versão
+2. **Versão incrementada** → Cria tag automaticamente
 3. **Build Docker** → Com a tag exata
 4. **Push Docker Hub** → Com a tag exata
 5. **Deploy Render** → Automaticamente
 
-## 📝 Exemplo de Uso
+## 📝 Versionamento Semântico
 
+### Tipos de Commit:
+- **`feat:`** → Incrementa minor version (1.0.0 → 1.1.0)
+- **`fix:`** → Incrementa patch version (1.0.0 → 1.0.1)
+- **`BREAKING CHANGE:`** → Incrementa major version (1.0.0 → 2.0.0)
+- **Outros** → Não incrementa versão
+
+### Exemplo:
 ```bash
 git add .
-git commit -m "feat: nova funcionalidade"
+git commit -m "feat: adiciona autenticação"
 git push origin main
+# Resultado: versão 1.0.0 → 1.1.0
 ```
 
 ## 🔧 Configuração
@@ -43,4 +51,4 @@ git push origin main
 - **CI/CD**: GitHub Actions
 - **Deploy**: Render
 - **Container**: Docker
-- **Versionamento**: Semantic Release 
+- **Versionamento**: Semântico automático 
